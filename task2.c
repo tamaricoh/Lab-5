@@ -42,8 +42,7 @@ void load_phdr(Elf32_Phdr *phdr, int fd, void *map_start) {
             void *addr = (void *)(uintptr_t)current_phdr->p_vaddr;
             off_t offset = current_phdr->p_offset;
             size_t filesz = current_phdr->p_filesz;
-            
-            // Map the segment into memory
+
             void *mapped_addr = mmap(addr, filesz, prot_flags, MAP_PRIVATE | MAP_FIXED, fd, offset);
             
             if (mapped_addr == MAP_FAILED) {
@@ -62,7 +61,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Open ELF file
     int elf_fd = open(argv[1], O_RDONLY);
     if (elf_fd == -1)
     {
@@ -70,7 +68,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Map ELF file into memory
     void *map_start = mmap(NULL, BUF_SZ, PROT_READ | PROT_WRITE, MAP_PRIVATE, elf_fd, 0);
     if (map_start == MAP_FAILED)
     {
@@ -79,14 +76,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Get ELF header and program header table
     Elf32_Ehdr *header = (Elf32_Ehdr *)map_start;
     Elf32_Phdr *phdr_table = (Elf32_Phdr *)((char *)map_start + header->e_phoff);
 
-    // Load program headers
     load_phdr(phdr_table, elf_fd, map_start);
 
-    // Clean up: Unmap memory and close file
     munmap(map_start, BUF_SZ);
     close(elf_fd);
 

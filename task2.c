@@ -42,7 +42,8 @@ void load_phdr(Elf32_Phdr *phdr, int fd, void *map_start) {
             void *addr = (void *)(uintptr_t)current_phdr->p_vaddr;
             off_t offset = current_phdr->p_offset;
             size_t filesz = current_phdr->p_filesz;
-
+            
+            // Map the segment into memory
             void *mapped_addr = mmap(addr, filesz, prot_flags, MAP_PRIVATE | MAP_FIXED, fd, offset);
             
             if (mapped_addr == MAP_FAILED) {
@@ -52,6 +53,8 @@ void load_phdr(Elf32_Phdr *phdr, int fd, void *map_start) {
         }
     }
 }
+
+int startup(int argc, char **argv, void (*start)());
 
 int main(int argc, char **argv)
 {
@@ -80,7 +83,7 @@ int main(int argc, char **argv)
     Elf32_Phdr *phdr_table = (Elf32_Phdr *)((char *)map_start + header->e_phoff);
 
     load_phdr(phdr_table, elf_fd, map_start);
-
+    startup(argc - 1, argv + 1, (void *)header->e_entry);
     munmap(map_start, BUF_SZ);
     close(elf_fd);
 
